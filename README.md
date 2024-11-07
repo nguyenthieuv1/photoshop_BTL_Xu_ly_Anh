@@ -1,4 +1,4 @@
-Tải và cài đặt OpenCV cho java và Intelijiài đặt OpenCV cho java và Intelliji
+Tải và cài đặt OpenCV cho java và Intelliji    
 1. vào trang web này và tải bản window  
 
 https://opencv.org/releases/
