@@ -26,36 +26,37 @@
         <Button fx:id="importImageButton" text="Import image" prefWidth="100" />
         <Button fx:id="save" text="Save" prefWidth="100" />
         <Button fx:id="smooth" text="Làm mịn ảnh" prefWidth="100" />
+        <Button fx:id="removeBackground" text="Tách nền" prefWidth="100" />
+        <Button fx:id="enhancement" text="Nâng cao chất lượng" prefWidth="100" />
     </VBox>
 
     <!-- Thumbnails Section at the Bottom -->
     <HBox layoutX="10" layoutY="470" spacing="10">
-        <StackPane style="-fx-border-color: black; -fx-border-width: 2;">
+        <StackPane fx:id="box1" style="-fx-border-color: black; -fx-border-width: 2;">
             <ImageView fx:id="image1" fitWidth="120" fitHeight="90" preserveRatio="true" />
             <Label fx:id="imageLabel1" text="" style="-fx-background-color: rgba(0,0,0,0.5); -fx-text-fill: white;"/>
         </StackPane>
-        <StackPane style="-fx-border-color: black; -fx-border-width: 2;">
+        <StackPane fx:id="box2" style="-fx-border-color: black; -fx-border-width: 2;">
             <ImageView fx:id="image2" fitWidth="120" fitHeight="90" preserveRatio="true" />
             <Label fx:id="imageLabel2" text="" style="-fx-background-color: rgba(0,0,0,0.5); -fx-text-fill: white;"/>
         </StackPane>
-        <StackPane style="-fx-border-color: black; -fx-border-width: 2;">
+        <StackPane fx:id="box3" style="-fx-border-color: black; -fx-border-width: 2;">
             <ImageView fx:id="image3" fitWidth="120" fitHeight="90" preserveRatio="true" />
             <Label fx:id="imageLabel3" text="" style="-fx-background-color: rgba(0,0,0,0.5); -fx-text-fill: white;"/>
         </StackPane>
-        <StackPane  style="-fx-border-color: black; -fx-border-width: 2;">
+        <StackPane fx:id="box4"  style="-fx-border-color: black; -fx-border-width: 2;">
             <ImageView fx:id="image4" fitWidth="120" fitHeight="90" preserveRatio="true" />
             <Label fx:id="imageLabel4" text="" style="-fx-background-color: rgba(0,0,0,0.5); -fx-text-fill: white;"/>
         </StackPane>
-        <StackPane  style="-fx-border-color: black; -fx-border-width: 2;">
+        <StackPane fx:id="box5"  style="-fx-border-color: black; -fx-border-width: 2;">
             <ImageView fx:id="image5" fitWidth="120" fitHeight="90" preserveRatio="true" />
             <Label fx:id="imageLabel5" text="" style="-fx-background-color: rgba(0,0,0,0.5); -fx-text-fill: white;"/>
         </StackPane>
+        <StackPane fx:id="box6"  style="-fx-border-color: black; -fx-border-width: 2;">
+            <ImageView fx:id="image6" fitWidth="120" fitHeight="90" preserveRatio="true" />
+            <Label fx:id="imageLabel6" text="" style="-fx-background-color: rgba(0,0,0,0.5); -fx-text-fill: white;"/>
+        </StackPane>
 
-<!--        <ImageView fx:id="image2" fitWidth="120" fitHeight="90" preserveRatio="true"/>-->
-
-
-<!--        <ImageView fx:id="image3" fitWidth="120" fitHeight="90" preserveRatio="true"/>-->
-<!--        <ImageView fx:id="image4" fitWidth="120" fitHeight="90" preserveRatio="true"/>-->
     </HBox>
 
 </AnchorPane>

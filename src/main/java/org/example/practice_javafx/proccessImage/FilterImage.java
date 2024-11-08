@@ -8,12 +8,12 @@ import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
-public class ProccessIMG {
+public class FilterImage {
     private Mat src;
     private String imgSrc;
     private Mat dst;
 
-    public ProccessIMG(String imgSrc) {
+    public FilterImage(String imgSrc) {
         this.imgSrc = imgSrc;
         // Load thư viện OpenCV
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);

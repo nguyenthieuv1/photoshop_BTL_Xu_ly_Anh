@@ -5,16 +5,22 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import org.example.practice_javafx.proccessImage.ProccessIMG;
+import org.example.practice_javafx.proccessImage.Enhancement;
+import org.example.practice_javafx.proccessImage.FilterImage;
+import org.example.practice_javafx.proccessImage.RemoveBackground;
 import org.opencv.core.Mat;
 
 import java.io.File;
 
 public class MainViewController {
     private String mainImagePath;
-    private ProccessIMG proccessIMG;
+    private FilterImage proccessIMG;
+    private RemoveBackground removeBackgroundClass;
+    private Image originImage;
+    private Enhancement enhancementClass;
 
     @FXML
     private ImageView mainImage;
@@ -35,6 +41,9 @@ public class MainViewController {
     private ImageView image5;
 
     @FXML
+    private ImageView image6;
+
+    @FXML
     private Button importImageButton;
 
     @FXML
@@ -42,6 +51,9 @@ public class MainViewController {
 
     @FXML
     private Button smooth;
+
+    @FXML
+    private Button enhancement;
 
     @FXML
     private Label imageLabel1;
@@ -59,41 +71,96 @@ public class MainViewController {
     private Label imageLabel5;
 
     @FXML
+    private Label imageLabel6;
+
+    @FXML
+    private Button removeBackground;
+
+    @FXML
+    private StackPane box1;
+
+    @FXML
+    private StackPane box2;
+
+    @FXML
+    private StackPane box3;
+
+    @FXML
+    private StackPane box4;
+
+    @FXML
+    private StackPane box5;
+
+    @FXML
+    private StackPane box6;
+
+    @FXML
     public void initialize() {
-        disappearThumbnail();
+
         // Thiết lập sự kiện cho nút "Import Image"
         importImageButton.setOnAction(event -> importImage());
         smooth.setOnAction(event -> smoothImage());
         actionBtnThumbnail();
-
+        removeBackground.setOnAction(event -> {
+            removeBackgroundImage();
+        });
+        enhancement.setOnMouseClicked(event -> {
+            enhancementImage();
+        });
 
     }
 
-    public void displayThumbnail(){
-        image1.setVisible(true);
-        image2.setVisible(true);
-        image3.setVisible(true);
-        image4.setVisible(true);
-        image5.setVisible(true);
-        imageLabel1.setVisible(true);
-        imageLabel2.setVisible(true);
-        imageLabel3.setVisible(true);
-        imageLabel4.setVisible(true);
-        imageLabel5.setVisible(true);
+    private void enhancementImage() {
+        Image imgEnhance1 = enhancementClass.cannyEnhancement(mainImagePath);
+        image1.setImage(imgEnhance1);
+        imageLabel1.setText("Canny enhancement");
+
+        Image imgEnhance2 = enhancementClass.LaplacianEnhancement(mainImagePath);
+        image2.setImage(imgEnhance2);
+        imageLabel2.setText("Laplacian enhancement");
+
+        Image imgEnhance3 = enhancementClass.sobelEnhancement(mainImagePath);
+        image3.setImage(imgEnhance3);
+        imageLabel3.setText("Sobel enhancement");
+
+        box4.setVisible(false);
+        box5.setVisible(false);
+        box6.setVisible(false);
+    }
+    public void setAllBoxVisible(){
+        box1.setVisible(true);
+        box2.setVisible(true);
+        box3.setVisible(true);
+        box4.setVisible(true);
+        box5.setVisible(true);
+        box6.setVisible(true);
     }
 
-    public void disappearThumbnail(){
-        image1.setVisible(false);
-        image2.setVisible(false);
-        image3.setVisible(false);
-        image4.setVisible(false);
-        image5.setVisible(false);
-        imageLabel1.setVisible(false);
-        imageLabel2.setVisible(false);
-        imageLabel3.setVisible(false);
-        imageLabel4.setVisible(false);
-        imageLabel5.setVisible(false);
+    private void removeBackgroundImage() {
+        setAllBoxVisible();
+        Image imgRemove = removeBackgroundClass.cannyRemoveBackground(mainImagePath);
+        image1.setImage(imgRemove);
+        imageLabel1.setText("Remove Background canny");
+
+        Image imgRemove2 = removeBackgroundClass.grabCutRemoveBackground(mainImagePath);
+        image2.setImage(imgRemove2);
+        imageLabel2.setText("Remove Background grabCut");
+
+        Image imgRemove3 = removeBackgroundClass.sobelRemoveBackground(mainImagePath);
+        image3.setImage(imgRemove3);
+        imageLabel3.setText("Remove Background sobel");
+
+        Image imgRemove4 = removeBackgroundClass.laplacianRemoveBackground(mainImagePath);
+        image4.setImage(imgRemove4);
+        imageLabel4.setText("Remove Background laplacian");
+
+        Image imgRemove5 = originImage;
+        image5.setImage(imgRemove5);
+        imageLabel5.setText("Original Image");
+
+        box6.setVisible(false);
     }
+
 
     public void actionBtnThumbnail(){
         image1.setOnMouseClicked(event -> {
@@ -115,6 +182,10 @@ public class MainViewController {
         image5.setOnMouseClicked(event -> {
             mainImage.setImage(image5.getImage());
         });
+
+        image6.setOnMouseClicked(event -> {
+            mainImage.setImage(image6.getImage());
+        });
     }
 
     public MainViewController() {
@@ -122,7 +193,7 @@ public class MainViewController {
     }
 
     private void smoothImage() {
-        displayThumbnail();
+        setAllBoxVisible();
         Image trungVi = proccessIMG.locTrungVi();
         image1.setImage(trungVi);
         imageLabel1.setText("Trung vị");
@@ -143,7 +214,15 @@ public class MainViewController {
         image5.setImage(amBan);
         imageLabel5.setText("Âm bản");
 
+        Image origin = originImage;
+        image6.setImage(origin);
+        imageLabel6.setText("Original Image");
 
+    }
+    public void initialFunction(){
+        this.proccessIMG = new FilterImage(mainImagePath);
+        this.removeBackgroundClass = new RemoveBackground();
+        this.enhancementClass = new Enhancement();
     }
 
     private void importImage() {
@@ -158,7 +237,7 @@ public class MainViewController {
         File selectedFile = fileChooser.showOpenDialog(new Stage());
 //         lấy đường dẫn
         mainImagePath = selectedFile.getAbsolutePath();
-        this.proccessIMG = new ProccessIMG(mainImagePath);
+        initialFunction();
         // khởi tạo proccessIMG
 //        proccessIMG.setImgSrc(mainImagePath);
 //        // lọc ảnh
@@ -168,12 +247,13 @@ public class MainViewController {
         if (selectedFile != null) {
             // Tạo đối tượng Image từ file
             Image image = new Image(selectedFile.toURI().toString());
+            originImage = image;
 
             // Đặt ảnh vào mainImage
             mainImage.setImage(image);
         }
     }
-    private Image matToImage(Mat mat) {
+    public Image matToImage(Mat mat) {
         // Convert Mat to Image (WritableImage)
         int width = mat.width();
         int height = mat.height();
