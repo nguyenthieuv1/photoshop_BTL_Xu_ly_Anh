@@ -5,7 +5,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelReader;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.StackPane;
+
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.example.practice_javafx.proccessImage.Enhancement;
@@ -13,7 +16,10 @@ import org.example.practice_javafx.proccessImage.FilterImage;
 import org.example.practice_javafx.proccessImage.RemoveBackground;
 import org.opencv.core.Mat;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 
 public class MainViewController {
     private String mainImagePath;
@@ -107,7 +113,52 @@ public class MainViewController {
         enhancement.setOnMouseClicked(event -> {
             enhancementImage();
         });
+        save.setOnMouseClicked(event -> {
+            saveImg();
+        });
 
+    }
+
+    public void saveImg(){
+        // Kiểm tra nếu mainImage không có ảnh
+        if (mainImage.getImage() == null) {
+            System.out.println("No image to save.");
+            return;
+        }
+
+        // Sử dụng FileChooser để chọn nơi lưu ảnh
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Image");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG Files", "*.png"));
+
+        // Hiển thị hộp thoại lưu file
+        File file = fileChooser.showSaveDialog(new Stage());
+
+        if (file != null) {
+            try {
+                // Chuyển đổi Image của JavaFX sang BufferedImage
+                BufferedImage bufferedImage = convertToBufferedImage(mainImage.getImage());
+                ImageIO.write(bufferedImage, "png", file);
+                System.out.println("Image saved successfully.");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private BufferedImage convertToBufferedImage(Image img) {
+        int width = (int) img.getWidth();
+        int height = (int) img.getHeight();
+        BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+        PixelReader pixelReader = img.getPixelReader();
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int argb = pixelReader.getArgb(x, y);
+                bufferedImage.setRGB(x, y, argb);
+            }
+        }
+        return bufferedImage;
     }
 
     private void enhancementImage() {
@@ -123,7 +174,10 @@ public class MainViewController {
         image3.setImage(imgEnhance3);
         imageLabel3.setText("Sobel enhancement");
 
-        box4.setVisible(false);
+        Image imgEnhance4 = originImage;
+        image4.setImage(imgEnhance4);
+        imageLabel4.setText("Origin Image");
+
         box5.setVisible(false);
         box6.setVisible(false);
     }

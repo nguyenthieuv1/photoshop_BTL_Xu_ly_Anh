@@ -2,6 +2,7 @@ module org.example.practice_javafx {
     requires javafx.controls;
     requires javafx.fxml;
     requires opencv;
+    requires java.desktop;
 
 
     opens org.example.practice_javafx to javafx.fxml;
