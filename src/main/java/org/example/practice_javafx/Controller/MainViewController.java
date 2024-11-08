@@ -13,6 +13,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.example.practice_javafx.proccessImage.Enhancement;
 import org.example.practice_javafx.proccessImage.FilterImage;
+import org.example.practice_javafx.proccessImage.Morphology;
 import org.example.practice_javafx.proccessImage.RemoveBackground;
 import org.opencv.core.Mat;
 
@@ -27,6 +28,7 @@ public class MainViewController {
     private RemoveBackground removeBackgroundClass;
     private Image originImage;
     private Enhancement enhancementClass;
+    private Morphology morphologyClass;
 
     @FXML
     private ImageView mainImage;
@@ -60,6 +62,9 @@ public class MainViewController {
 
     @FXML
     private Button enhancement;
+
+    @FXML
+    private Button morphology;
 
     @FXML
     private Label imageLabel1;
@@ -116,6 +121,28 @@ public class MainViewController {
         save.setOnMouseClicked(event -> {
             saveImg();
         });
+        morphology.setOnMouseClicked(event -> {
+            morphologyImage();
+        });
+
+    }
+
+    private void morphologyImage() {
+        Image imgMorphology1 = morphologyClass.erosion(mainImagePath);
+        image1.setImage(imgMorphology1);
+        imageLabel1.setText("Erosion");
+
+        Image imgMorphology2 = morphologyClass.dilation(mainImagePath);
+        image2.setImage(imgMorphology2);
+        imageLabel2.setText("Dilation");
+
+        Image imgMorphology3 = originImage;
+        image3.setImage(imgMorphology3);
+        imageLabel3.setText("Original Image");
+
+        box4.setVisible(false);
+        box5.setVisible(false);
+        box6.setVisible(false);
 
     }
 
@@ -277,6 +304,7 @@ public class MainViewController {
         this.proccessIMG = new FilterImage(mainImagePath);
         this.removeBackgroundClass = new RemoveBackground();
         this.enhancementClass = new Enhancement();
+        this.morphologyClass = new Morphology();
     }
 
     private void importImage() {

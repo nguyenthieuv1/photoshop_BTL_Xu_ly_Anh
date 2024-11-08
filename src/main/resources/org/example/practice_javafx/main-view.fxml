@@ -28,6 +28,7 @@
         <Button fx:id="smooth" text="Làm mịn ảnh" prefWidth="100" />
         <Button fx:id="removeBackground" text="Tách nền" prefWidth="100" />
         <Button fx:id="enhancement" text="Nâng cao chất lượng" prefWidth="100" />
+        <Button fx:id="morphology" text="Hình thái" prefWidth="100" />
     </VBox>
 
     <!-- Thumbnails Section at the Bottom -->
