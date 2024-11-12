@@ -17,10 +17,17 @@ import org.example.practice_javafx.proccessImage.Morphology;
 import org.example.practice_javafx.proccessImage.RemoveBackground;
 import org.opencv.core.Mat;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
+import java.awt.*;
+import java.awt.color.ColorSpace;
 import java.io.File;
 import java.io.IOException;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorConvertOp;
+import java.io.IOException;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
 
 public class MainViewController {
     private String mainImagePath;
@@ -105,27 +112,271 @@ public class MainViewController {
     @FXML
     private StackPane box6;
 
+    private Image compressedImage;
+
+    @FXML
+    private Button compressButton;
+
+    @FXML
+    private Button downloadButton;
+
+    @FXML
+    private Button formatButton;
+
+    @FXML
+    private Button whiteBalanceButton;
+
     @FXML
     public void initialize() {
-
-        // Thiết lập sự kiện cho nút "Import Image"
         importImageButton.setOnAction(event -> importImage());
+        whiteBalanceButton.setOnAction(event -> applyWhiteBalance());
         smooth.setOnAction(event -> smoothImage());
         actionBtnThumbnail();
-        removeBackground.setOnAction(event -> {
-            removeBackgroundImage();
-        });
-        enhancement.setOnMouseClicked(event -> {
-            enhancementImage();
-        });
-        save.setOnMouseClicked(event -> {
-            saveImg();
-        });
-        morphology.setOnMouseClicked(event -> {
-            morphologyImage();
-        });
-
+        removeBackground.setOnAction(event -> removeBackgroundImage());
+        enhancement.setOnMouseClicked(event -> enhancementImage());
+        save.setOnMouseClicked(event -> saveImg());
+        morphology.setOnMouseClicked(event -> morphologyImage());
+        formatButton.setOnAction(event -> convertAndSaveImage());
+        compressButton.setOnAction(event -> compressImage());
+        downloadButton.setOnAction(event -> downloadCompressedImage());
     }
+
+    private void applyWhiteBalance() {
+        if (mainImage.getImage() == null) {
+            System.out.println("Không có ảnh nào để cân bằng trắng.");
+            return;
+        }
+
+        WritableImage balancedImage = applyWhiteBalanceToImage(mainImage.getImage());
+        mainImage.setImage(balancedImage);
+        System.out.println("Đã áp dụng cân bằng trắng.");
+    }
+
+    private WritableImage applyWhiteBalanceToImage(Image image) {
+        PixelReader pixelReader = image.getPixelReader();
+        int width = (int) image.getWidth();
+        int height = (int) image.getHeight();
+
+        long totalRed = 0, totalGreen = 0, totalBlue = 0;
+        int totalPixels = width * height;
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int argb = pixelReader.getArgb(x, y);
+                totalRed += (argb >> 16) & 0xFF;
+                totalGreen += (argb >> 8) & 0xFF;
+                totalBlue += argb & 0xFF;
+            }
+        }
+
+        double avgRed = totalRed / (double) totalPixels;
+        double avgGreen = totalGreen / (double) totalPixels;
+        double avgBlue = totalBlue / (double) totalPixels;
+
+        double redFactor = avgRed / avgGreen;
+        double blueFactor = avgBlue / avgGreen;
+
+        WritableImage writableImage = new WritableImage(width, height);
+        var pixelWriter = writableImage.getPixelWriter();
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int argb = pixelReader.getArgb(x, y);
+
+                int red = (int) (((argb >> 16) & 0xFF) / redFactor);
+                int green = (argb >> 8) & 0xFF;
+                int blue = (int) ((argb & 0xFF) / blueFactor);
+
+                red = Math.min(255, Math.max(0, red));
+                green = Math.min(255, Math.max(0, green));
+                blue = Math.min(255, Math.max(0, blue));
+
+                int newArgb = (argb & 0xFF000000) | (red << 16) | (green << 8) | blue;
+                pixelWriter.setArgb(x, y, newArgb);
+            }
+        }
+
+        return writableImage;
+    }
+
+
+    @FXML
+    private void convertAndSaveImage() {
+        if (mainImage.getImage() == null) {
+            System.out.println("Không có ảnh nào để lưu.");
+            return;
+        }
+
+        // Mở cửa sổ chọn file
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Lưu ảnh với định dạng mới");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("PNG Files", "*.png"),
+                new FileChooser.ExtensionFilter("JPEG Files", "*.jpg"),
+                new FileChooser.ExtensionFilter("WebP Files", "*.webp")
+        );
+
+        File file = fileChooser.showSaveDialog(new Stage());
+        if (file == null) {
+            System.out.println("Người dùng đã hủy chọn file.");
+            return;
+        }
+
+        try {
+            // Xác định định dạng dựa trên phần mở rộng của file
+            String format;
+            if (file.getPath().endsWith(".png")) {
+                format = "png";
+            } else if (file.getPath().endsWith(".jpg")) {
+                format = "jpg";
+            } else if (file.getPath().endsWith(".webp")) {
+                format = "webp";
+            } else {
+                System.out.println("Định dạng không hỗ trợ.");
+                return;
+            }
+
+            System.out.println("Bắt đầu lưu ảnh vào file: " + file.getAbsolutePath());
+
+            // Chuyển đổi Image của JavaFX thành BufferedImage
+            BufferedImage bufferedImage = convertToBufferedImage(mainImage.getImage());
+
+            // Ghi ảnh vào file với định dạng đã chọn
+            boolean saved = ImageIO.write(bufferedImage, format, file);
+            if (saved) {
+                System.out.println("Đã lưu ảnh thành công ở định dạng " + format.toUpperCase());
+            } else {
+                System.out.println("Lỗi khi ghi ảnh: Định dạng không được hỗ trợ.");
+            }
+
+        } catch (IOException e) {
+            System.out.println("Lỗi khi lưu ảnh: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
+
+
+    private void compressImage() {
+        if (mainImagePath == null) {
+            System.out.println("No image to compress.");
+            return;
+        }
+
+        try {
+            File inputFile = new File(mainImagePath);
+            BufferedImage image = ImageIO.read(inputFile);
+
+            // Giảm độ phân giải xuống một nửa
+            int newWidth = image.getWidth() / 2;
+            int newHeight = image.getHeight() / 2;
+            BufferedImage resizedImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_BYTE_GRAY);
+            Graphics2D g = resizedImage.createGraphics();
+            g.drawImage(image, 0, 0, newWidth, newHeight, null);
+            g.dispose();
+
+            // Tạo ImageWriter cho định dạng JPEG
+            ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("jpg").next();
+            ImageWriteParam jpgWriteParam = jpgWriter.getDefaultWriteParam();
+
+            // Thiết lập mức độ nén xuống 20%
+            if (jpgWriteParam.canWriteCompressed()) {
+                jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+                jpgWriteParam.setCompressionQuality(0.2f); // Giảm chất lượng xuống còn 20%
+            }
+
+            // Ghi ảnh nén vào file tạm thời
+            File tempFile = new File("compressed_image.jpg");
+            try (ImageOutputStream outputStream = ImageIO.createImageOutputStream(tempFile)) {
+                jpgWriter.setOutput(outputStream);
+                jpgWriter.write(null, new javax.imageio.IIOImage(resizedImage, null, null), jpgWriteParam);
+            }
+
+            // Đóng ImageWriter sau khi sử dụng
+            jpgWriter.dispose();
+
+            // Cập nhật ảnh đã nén để có thể tải xuống sau
+            compressedImage = new Image(tempFile.toURI().toString());
+            System.out.println("Image compressed successfully with reduced resolution and 20% quality.");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private BufferedImage convertToRGB(BufferedImage image) {
+        if (image.getColorModel().getColorSpace().getType() != ColorSpace.TYPE_RGB) {
+            BufferedImage rgbImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+            new ColorConvertOp(ColorSpace.getInstance(ColorSpace.CS_sRGB), null).filter(image, rgbImage);
+            return rgbImage;
+        }
+        return image;
+    }
+
+    private File openFileChooser(String title, String... extensions) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle(title);
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", extensions));
+        return fileChooser.showSaveDialog(new Stage());
+    }
+
+
+    private void downloadCompressedImage() {
+        if (mainImage.getImage() == null) {
+            System.out.println("No image to save.");
+            return;
+        }
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Image");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG Files", "*.png"));
+
+        // Hiển thị hộp thoại lưu file và đảm bảo người dùng chọn một tên file hợp lệ
+        File file = fileChooser.showSaveDialog(new Stage());
+        if (file != null) {
+            try {
+                BufferedImage bufferedImage = convertToBufferedImage(mainImage.getImage());
+                // Đảm bảo file có phần mở rộng ".png"
+                if (!file.getPath().endsWith(".png")) {
+                    file = new File(file.getPath() + ".png");
+                }
+                ImageIO.write(bufferedImage, "png", file);
+                System.out.println("Image saved successfully.");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    private void saveImage() {
+        if (mainImage.getImage() == null) {
+            System.out.println("No image to save.");
+            return;
+        }
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Image");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG Files", "*.png"));
+
+        // Hiển thị hộp thoại lưu file và đảm bảo người dùng chọn một tên file hợp lệ
+        File file = fileChooser.showSaveDialog(new Stage());
+        if (file != null) {
+            try {
+                BufferedImage bufferedImage = convertToBufferedImage(mainImage.getImage());
+                // Đảm bảo file có phần mở rộng ".png"
+                if (!file.getPath().endsWith(".png")) {
+                    file = new File(file.getPath() + ".png");
+                }
+                ImageIO.write(bufferedImage, "png", file);
+                System.out.println("Image saved successfully.");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 
     private void morphologyImage() {
         Image imgMorphology1 = morphologyClass.erosion(mainImagePath);
