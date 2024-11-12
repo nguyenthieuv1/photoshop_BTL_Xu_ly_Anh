@@ -130,11 +130,11 @@ public class MainViewController {
     private void morphologyImage() {
         Image imgMorphology1 = morphologyClass.erosion(mainImagePath);
         image1.setImage(imgMorphology1);
-        imageLabel1.setText("Erosion");
+        imageLabel1.setText("Dilation");
 
         Image imgMorphology2 = morphologyClass.dilation(mainImagePath);
         image2.setImage(imgMorphology2);
-        imageLabel2.setText("Dilation");
+        imageLabel2.setText("Erosion");
 
         Image imgMorphology3 = originImage;
         image3.setImage(imgMorphology3);

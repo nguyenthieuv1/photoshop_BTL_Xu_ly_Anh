@@ -22,7 +22,7 @@ public class Morphology {
         }
 
         // Khởi tạo kernel (ma trận hình chữ nhật 3x3)
-        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_CROSS, new Size(3, 3));
 
         // Tạo một biến đầu ra
         Mat erodedImage = new Mat();
@@ -45,11 +45,11 @@ public class Morphology {
         }
 
         // Khởi tạo kernel (ma trận hình chữ nhật 3x3)
-        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_CROSS, new Size(3, 3));
 
         // Tạo một biến đầu ra
         Mat dilateImage = new Mat();
-        // Thực hiện phép Erosion
+        // Thực hiện phép dilate
         Imgproc.dilate(src, dilateImage, kernel);
 
         return matToImage(dilateImage);
