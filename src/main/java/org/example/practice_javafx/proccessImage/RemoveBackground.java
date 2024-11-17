@@ -5,6 +5,7 @@ import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,8 +44,104 @@ public class RemoveBackground {
         // Bước 5: Sao chép vật thể vào ảnh mới, thay nền bằng màu trắng (hoặc trong suốt)
         Mat result = new Mat(src.size(), CvType.CV_8UC3, new Scalar(255, 255, 255));  // Màu trắng làm nền
         src.copyTo(result, mask);  // Sao chép vật thể vào ảnh kết quả
-        return matToImage(result);
+        return matToImage1(result);
     }
+
+    public Image removeBackgroundColor(String srcImg) {
+        // Tải thư viện OpenCV
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+
+        // Đọc ảnh đầu vào
+        Mat src = Imgcodecs.imread(srcImg);
+        if (src.empty()) {
+            System.out.println("Không thể tải ảnh");
+            throw new RuntimeException("Không thể tải ảnh");
+        }
+
+        // Bước 1: Làm mờ ảnh để giảm nhiễu
+        Mat blurred = new Mat();
+        Imgproc.GaussianBlur(src, blurred, new Size(5, 5), 0);
+
+        // Bước 2: Chuyển ảnh sang xám
+        Mat gray = new Mat();
+        Imgproc.cvtColor(blurred, gray, Imgproc.COLOR_BGR2GRAY);
+
+        // Bước 3: Áp dụng phát hiện cạnh Canny
+        Mat edges = new Mat();
+        Imgproc.Canny(gray, edges, 50, 150); // Thay đổi ngưỡng nếu cần
+
+        // Bước 4: Mở rộng các cạnh để tạo vùng đối tượng
+        Mat dilatedEdges = new Mat();
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
+        Imgproc.dilate(edges, dilatedEdges, kernel);
+
+        // Bước 5: Tìm kiếm các vùng đối tượng lớn nhất
+        Mat mask = new Mat();
+        Imgproc.threshold(dilatedEdges, mask, 0, 255, Imgproc.THRESH_BINARY);
+
+        // Tìm contours để làm mịn vùng đối tượng (tùy chọn)
+        List<MatOfPoint> contours = new ArrayList<>();
+        Mat hierarchy = new Mat();
+        Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        // Tạo mask chỉ chứa đối tượng lớn nhất
+        mask.setTo(new Scalar(0)); // Xóa toàn bộ mask
+        Imgproc.drawContours(mask, contours, -1, new Scalar(255), Core.FILLED);
+
+        // Bước 6: Áp dụng mask lên ảnh gốc
+        Mat result = new Mat(src.size(), src.type(), new Scalar(255, 255, 255)); // Nền trắng
+        src.copyTo(result, mask);
+
+        // Chuyển đổi ảnh kết quả sang định dạng hiển thị được
+        return matToImage1(result);
+    }
+
+    public Image removeBackgroundWithGrabCut(String srcImg) {
+        // Tải thư viện OpenCV
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+
+        // Đọc ảnh đầu vào
+        Mat src = Imgcodecs.imread(srcImg);
+        if (src.empty()) {
+            System.out.println("Không thể tải ảnh");
+            throw new RuntimeException("Không thể tải ảnh");
+        }
+
+        // Bước 1: Xác định ROI (Region of Interest)
+        // ROI là một hình chữ nhật bao quanh đối tượng
+        Rect roi = new Rect(50, 50, src.cols() - 100, src.rows() - 100); // Điều chỉnh tọa độ ROI theo ảnh của bạn
+
+        // Bước 2: Tạo mặt nạ ban đầu
+        Mat mask = new Mat(src.size(), CvType.CV_8UC1, new Scalar(Imgproc.GC_PR_BGD)); // Mặc định nền có thể là nền
+        Mat bgModel = new Mat(); // Mô hình nền
+        Mat fgModel = new Mat(); // Mô hình tiền cảnh (foreground)
+
+        // Bước 3: Áp dụng thuật toán GrabCut
+        Imgproc.grabCut(src, mask, roi, bgModel, fgModel, 5, Imgproc.GC_INIT_WITH_RECT);
+
+        // Chuyển đổi mask từ các giá trị GrabCut (GC_BGD, GC_PR_BGD, GC_FGD, GC_PR_FGD)
+        // thành mask nhị phân: 0 = nền, 255 = đối tượng
+        Mat binMask = new Mat();
+        Core.compare(mask, new Scalar(Imgproc.GC_PR_FGD), binMask, Core.CMP_EQ); // Chỉ giữ GC_PR_FGD và GC_FGD
+        binMask.convertTo(binMask, CvType.CV_8U, 255); // Chuyển sang giá trị nhị phân 0 và 255
+
+        // Bước 4: Áp dụng mặt nạ lên ảnh gốc
+        Mat result = new Mat(src.size(), src.type(), new Scalar(255, 255, 255)); // Nền trắng
+        src.copyTo(result, binMask);
+
+        // Chuyển đổi kết quả sang Image để hiển thị
+        return matToImage1(result);
+    }
+
+    // Phương thức hỗ trợ: Chuyển Mat sang Image
+    private Image matToImage1(Mat mat) {
+        MatOfByte buffer = new MatOfByte();
+        Imgcodecs.imencode(".png", mat, buffer);
+        return new Image(new ByteArrayInputStream(buffer.toArray()));
+    }
+
+
+
 
     public Image grabCutRemoveBackground(String srcImg) {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
@@ -74,7 +171,7 @@ public class RemoveBackground {
         // Tạo ảnh kết quả bằng cách giữ lại những pixel foreground trong ảnh gốc
         Mat foreground = new Mat(src.size(), CvType.CV_8UC3, new Scalar(255, 255, 255)); // Màu trắng cho nền
         src.copyTo(foreground, mask);
-        return matToImage(foreground);
+        return matToImage1(foreground);
     }
     public Image sobelRemoveBackground(String srcImg){
         // Tải thư viện OpenCV
@@ -118,7 +215,7 @@ public class RemoveBackground {
         // Tạo ảnh kết quả với nền trắng
         Mat result = new Mat(src.size(), CvType.CV_8UC3, new Scalar(255, 255, 255)); // Màu trắng cho nền
         src.copyTo(result, mask);  // Sao chép vật thể vào ảnh kết quả
-        return matToImage(result);
+        return matToImage1(result);
     }
 
     public Image laplacianRemoveBackground(String srcImg){
@@ -158,7 +255,7 @@ public class RemoveBackground {
         // Tạo ảnh kết quả với nền trắng
         Mat result = new Mat(src.size(), CvType.CV_8UC3, new Scalar(255, 255, 255)); // Màu trắng cho nền
         src.copyTo(result, mask);  // Sao chép vật thể vào ảnh kết quả
-        return matToImage(result);
+        return matToImage1(result);
     }
 
     public Image matToImage(Mat mat) {

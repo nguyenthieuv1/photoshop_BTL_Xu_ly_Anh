@@ -30,11 +30,11 @@
         <Button fx:id="removeBackground" text="Tách nền" prefWidth="100" />
         <Button fx:id="enhancement" text="Nâng cao chất lượng" prefWidth="100" />
         <Button fx:id="morphology" text="Hình thái" prefWidth="100" />
-        <Button fx:id="compressButton" text="Nén ảnh"/>
-        <Button fx:id="formatButton" text="Chuyển Đổi Định Dạng"/>
+<!--        <Button fx:id="compressButton" text="Nén ảnh"/>-->
+<!--        <Button fx:id="formatButton" text="Chuyển Đổi Định Dạng" />-->
         <Button fx:id="whiteBalanceButton" text="Cân bằng trắng" prefWidth="100" />
 
-        <Button fx:id="downloadButton" text="Tải về"/>
+<!--        <Button fx:id="downloadButton" text="Tải về"/>-->
 
     </VBox>
 

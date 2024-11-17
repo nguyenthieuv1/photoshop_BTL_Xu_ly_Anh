@@ -3,14 +3,12 @@ package org.example.practice_javafx.proccessImage;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import javafx.stage.FileChooser;
-import org.opencv.core.Core;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.Size;
+import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import javax.imageio.ImageIO;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 
@@ -33,6 +31,37 @@ public class FilterImage {
             throw new RuntimeException("Không thể tải ảnh");
         }
     }
+
+
+    public Image locTrungViColor() {
+        // Load thư viện OpenCV
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+
+        // Đọc ảnh gốc
+//        Mat src = Imgcodecs.imread(imgSrc);
+        if (src.empty()) {
+            System.out.println("Không thể đọc ảnh");
+            throw new RuntimeException("Không thể tải ảnh");
+        }
+
+        // Tạo ma trận ảnh đầu ra cho kết quả sau khi làm mịn
+        Mat dst = new Mat();
+
+        // Áp dụng bộ lọc trung vị với kích thước kernel 5
+        int kernelSize = 5; // Kích thước kernel là số lẻ (ví dụ: 3, 5, 7, ...)
+        Imgproc.medianBlur(src, dst, kernelSize);
+
+        // Chuyển đổi ảnh kết quả sang định dạng hiển thị
+        return matToImage1(dst);
+    }
+
+    // Hàm chuyển đổi từ Mat sang Image để hiển thị
+    private Image matToImage1(Mat mat) {
+        MatOfByte buffer = new MatOfByte();
+        Imgcodecs.imencode(".png", mat, buffer);
+        return new Image(new ByteArrayInputStream(buffer.toArray()));
+    }
+
 
     public Image locAmBan(){
         // Áp dụng bộ lọc Sobel theo hướng x và y
@@ -65,7 +94,7 @@ public class FilterImage {
         Mat dst = new Mat();
         // Áp dụng bộ lọc trung bình với kích thước kernel 5x5
         Imgproc.blur(src, dst, new org.opencv.core.Size(5, 5));
-        return matToImage(dst);
+        return matToImage1(dst);
     }
 
     public Image locMax(){
@@ -75,7 +104,7 @@ public class FilterImage {
         // Ảnh đầu ra cho kết quả sau khi áp dụng bộ lọc Max
         Mat maxFiltered = new Mat();
         Imgproc.dilate(src, maxFiltered, kernel); // Bộ lọc Max - Dilation
-        return matToImage(maxFiltered);
+        return matToImage1(maxFiltered);
     }
     public Image locMin(){
         // Tạo kernel kích thước 3x3
@@ -84,7 +113,7 @@ public class FilterImage {
         // Ảnh đầu ra cho kết quả sau khi áp dụng bộ lọc Min
         Mat minFiltered = new Mat();
         Imgproc.erode(src, minFiltered, kernel); // Bộ lọc Min - Erosion
-        return matToImage(minFiltered);
+        return matToImage1(minFiltered);
     }
 
     private Image matToImage(Mat mat) {

@@ -114,14 +114,14 @@ public class MainViewController {
 
     private Image compressedImage;
 
-    @FXML
-    private Button compressButton;
+//    @FXML
+//    private Button compressButton;
 
-    @FXML
-    private Button downloadButton;
+//    @FXML
+//    private Button downloadButton;
 
-    @FXML
-    private Button formatButton;
+//    @FXML
+//    private Button formatButton;
 
     @FXML
     private Button whiteBalanceButton;
@@ -136,9 +136,9 @@ public class MainViewController {
         enhancement.setOnMouseClicked(event -> enhancementImage());
         save.setOnMouseClicked(event -> saveImg());
         morphology.setOnMouseClicked(event -> morphologyImage());
-        formatButton.setOnAction(event -> convertAndSaveImage());
-        compressButton.setOnAction(event -> compressImage());
-        downloadButton.setOnAction(event -> downloadCompressedImage());
+//        formatButton.setOnAction(event -> convertAndSaveImage());
+//        compressButton.setOnAction(event -> compressImage());
+//        downloadButton.setOnAction(event -> downloadCompressedImage());
     }
 
     private void applyWhiteBalance() {
@@ -379,13 +379,13 @@ public class MainViewController {
 
 
     private void morphologyImage() {
-        Image imgMorphology1 = morphologyClass.erosion(mainImagePath);
+        Image imgMorphology1 = morphologyClass.erosionColor(mainImagePath);
         image1.setImage(imgMorphology1);
-        imageLabel1.setText("Erosion");
+        imageLabel1.setText("Erosion (Co ảnh)");
 
-        Image imgMorphology2 = morphologyClass.dilation(mainImagePath);
+        Image imgMorphology2 = morphologyClass.dilationColor(mainImagePath);
         image2.setImage(imgMorphology2);
-        imageLabel2.setText("Dilation");
+        imageLabel2.setText("Dilation (dãn ảnh");
 
         Image imgMorphology3 = originImage;
         image3.setImage(imgMorphology3);
@@ -440,15 +440,15 @@ public class MainViewController {
     }
 
     private void enhancementImage() {
-        Image imgEnhance1 = enhancementClass.cannyEnhancement(mainImagePath);
+        Image imgEnhance1 = enhancementClass.cannyEnhancementColor(mainImagePath);
         image1.setImage(imgEnhance1);
         imageLabel1.setText("Canny enhancement");
 
-        Image imgEnhance2 = enhancementClass.LaplacianEnhancement(mainImagePath);
+        Image imgEnhance2 = enhancementClass.LaplacianEnhancementColor(mainImagePath);
         image2.setImage(imgEnhance2);
         imageLabel2.setText("Laplacian enhancement");
 
-        Image imgEnhance3 = enhancementClass.sobelEnhancement(mainImagePath);
+        Image imgEnhance3 = enhancementClass.sobelEnhancementColor(mainImagePath);
         image3.setImage(imgEnhance3);
         imageLabel3.setText("Sobel enhancement");
 
@@ -474,7 +474,7 @@ public class MainViewController {
         image1.setImage(imgRemove);
         imageLabel1.setText("Remove Background canny");
 
-        Image imgRemove2 = removeBackgroundClass.grabCutRemoveBackground(mainImagePath);
+        Image imgRemove2 = removeBackgroundClass.removeBackgroundWithGrabCut(mainImagePath);
         image2.setImage(imgRemove2);
         imageLabel2.setText("Remove Background grabCut");
 
@@ -486,11 +486,14 @@ public class MainViewController {
         image4.setImage(imgRemove4);
         imageLabel4.setText("Remove Background laplacian");
 
-        Image imgRemove5 = originImage;
+        Image imgRemove5 = removeBackgroundClass.removeBackgroundColor(mainImagePath);
         image5.setImage(imgRemove5);
-        imageLabel5.setText("Original Image");
+        imageLabel5.setText("Remove Background keep color");
 
-        box6.setVisible(false);
+        Image imgRemove6 = originImage;
+        image6.setImage(imgRemove6);
+        imageLabel6.setText("Original Image");
+
     }
 
 
@@ -526,7 +529,7 @@ public class MainViewController {
 
     private void smoothImage() {
         setAllBoxVisible();
-        Image trungVi = proccessIMG.locTrungVi();
+        Image trungVi = proccessIMG.locTrungViColor();
         image1.setImage(trungVi);
         imageLabel1.setText("Trung vị");
 
