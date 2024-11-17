@@ -5,6 +5,7 @@ module org.example.practice_javafx {
     requires java.desktop;
 
 
+
     opens org.example.practice_javafx to javafx.fxml;
     exports org.example.practice_javafx;
     exports org.example.practice_javafx.Controller;

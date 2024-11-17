@@ -1,13 +1,29 @@
 package org.example.practice_javafx.Controller;
 
+import javafx.scene.paint.Color;
+import javafx.scene.image.WritableImage;
+
 import javafx.fxml.FXML;
+import javafx.scene.Group;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
+import javafx.scene.SnapshotParameters;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
+import javafx.scene.image.WritableImage;
+import javafx.stage.FileChooser;
+
+import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.IOException;
 
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -39,6 +55,9 @@ public class MainViewController {
 
     @FXML
     private ImageView mainImage;
+
+    @FXML
+    private ImageView overlayImage;
 
     @FXML
     private ImageView image1;
@@ -95,6 +114,9 @@ public class MainViewController {
     private Button removeBackground;
 
     @FXML
+    private Button insertImg;
+
+    @FXML
     private StackPane box1;
 
     @FXML
@@ -134,12 +156,97 @@ public class MainViewController {
         actionBtnThumbnail();
         removeBackground.setOnAction(event -> removeBackgroundImage());
         enhancement.setOnMouseClicked(event -> enhancementImage());
-        save.setOnMouseClicked(event -> saveImg());
+        save.setOnMouseClicked(event -> saveMainImage());
         morphology.setOnMouseClicked(event -> morphologyImage());
+        insertImg.setOnAction(event -> insertImg());
+
+        addDragEventHandlersToImage();
+
 //        formatButton.setOnAction(event -> convertAndSaveImage());
 //        compressButton.setOnAction(event -> compressImage());
 //        downloadButton.setOnAction(event -> downloadCompressedImage());
     }
+
+    private void addDragEventHandlersToImage() {
+        final double[] initialX = {0};
+        final double[] initialY = {0};
+
+        overlayImage.setOnMousePressed(event -> {
+            // Lưu vị trí chuột khi nhấn vào ảnh
+            initialX[0] = event.getSceneX();
+            initialY[0] = event.getSceneY();
+        });
+
+        overlayImage.setOnMouseDragged(event -> {
+            // Tính toán sự dịch chuyển của chuột
+            double deltaX = event.getSceneX() - initialX[0];
+            double deltaY = event.getSceneY() - initialY[0];
+
+            // Di chuyển ảnh theo vị trí chuột
+            overlayImage.setLayoutX(overlayImage.getLayoutX() + deltaX);
+            overlayImage.setLayoutY(overlayImage.getLayoutY() + deltaY);
+
+            // Cập nhật lại vị trí ban đầu của chuột
+            initialX[0] = event.getSceneX();
+            initialY[0] = event.getSceneY();
+        });
+
+        overlayImage.setOnMouseReleased(event -> {
+            // Bạn có thể thêm các hành động khi thả chuột nếu cần
+        });
+
+    }
+    // Hàm gộp ảnh
+    public void combineImages() {
+        if (mainImage.getImage() == null || overlayImage.getImage() == null) {
+            System.out.println("Vui lòng tải cả hai ảnh để gộp.");
+            return;
+        }
+
+        // Lấy kích thước thực của `mainImage`
+        Image mainIm = mainImage.getImage();
+        double width = mainIm.getWidth();
+        double height = mainIm.getHeight();
+
+//        System.out.println("width: " + width+" height: "+height);
+
+        // Tạo một `WritableImage` với kích thước của `mainImage`
+        WritableImage writableImage = new WritableImage((int) width, (int) height);
+        Canvas canvas = new Canvas(width, height);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+
+        // Vẽ `mainImage` lên `canvas`
+        Image mainImg = mainImage.getImage();
+        gc.drawImage(mainImg, 0, 0, width, height);
+
+        // Lấy vị trí hiện tại của `overlayImage` và vẽ nó lên `canvas`
+        Image overlayImg = overlayImage.getImage();
+        double overlayX = overlayImage.getLayoutX();
+        double overlayY = overlayImage.getLayoutY();
+        gc.drawImage(overlayImg, overlayX, overlayY, overlayImage.getFitWidth(), overlayImage.getFitHeight());
+
+        // Chuyển `canvas` thành `WritableImage`
+        canvas.snapshot(new SnapshotParameters(), writableImage);
+
+
+        saveImage(writableImage);
+
+//        mainImage.setImage(writableImage);
+    }
+
+    private void insertImg() {
+        String srcPath = ImportAndGetPathImage();  // Lấy đường dẫn ảnh từ file
+        Image importedImage = new Image(srcPath);   // Tạo đối tượng Image từ file
+
+        if (importedImage.isError()) {
+            System.out.println("Không thể tải ảnh.");
+            return;
+        }
+
+        overlayImage.setImage(importedImage);
+    }
+
+
 
     private void applyWhiteBalance() {
         if (mainImage.getImage() == null) {
@@ -257,54 +364,6 @@ public class MainViewController {
 
 
 
-
-    private void compressImage() {
-        if (mainImagePath == null) {
-            System.out.println("No image to compress.");
-            return;
-        }
-
-        try {
-            File inputFile = new File(mainImagePath);
-            BufferedImage image = ImageIO.read(inputFile);
-
-            // Giảm độ phân giải xuống một nửa
-            int newWidth = image.getWidth() / 2;
-            int newHeight = image.getHeight() / 2;
-            BufferedImage resizedImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_BYTE_GRAY);
-            Graphics2D g = resizedImage.createGraphics();
-            g.drawImage(image, 0, 0, newWidth, newHeight, null);
-            g.dispose();
-
-            // Tạo ImageWriter cho định dạng JPEG
-            ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("jpg").next();
-            ImageWriteParam jpgWriteParam = jpgWriter.getDefaultWriteParam();
-
-            // Thiết lập mức độ nén xuống 20%
-            if (jpgWriteParam.canWriteCompressed()) {
-                jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-                jpgWriteParam.setCompressionQuality(0.2f); // Giảm chất lượng xuống còn 20%
-            }
-
-            // Ghi ảnh nén vào file tạm thời
-            File tempFile = new File("compressed_image.jpg");
-            try (ImageOutputStream outputStream = ImageIO.createImageOutputStream(tempFile)) {
-                jpgWriter.setOutput(outputStream);
-                jpgWriter.write(null, new javax.imageio.IIOImage(resizedImage, null, null), jpgWriteParam);
-            }
-
-            // Đóng ImageWriter sau khi sử dụng
-            jpgWriter.dispose();
-
-            // Cập nhật ảnh đã nén để có thể tải xuống sau
-            compressedImage = new Image(tempFile.toURI().toString());
-            System.out.println("Image compressed successfully with reduced resolution and 20% quality.");
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     private BufferedImage convertToRGB(BufferedImage image) {
         if (image.getColorModel().getColorSpace().getType() != ColorSpace.TYPE_RGB) {
             BufferedImage rgbImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
@@ -319,34 +378,6 @@ public class MainViewController {
         fileChooser.setTitle(title);
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", extensions));
         return fileChooser.showSaveDialog(new Stage());
-    }
-
-
-    private void downloadCompressedImage() {
-        if (mainImage.getImage() == null) {
-            System.out.println("No image to save.");
-            return;
-        }
-
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save Image");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG Files", "*.png"));
-
-        // Hiển thị hộp thoại lưu file và đảm bảo người dùng chọn một tên file hợp lệ
-        File file = fileChooser.showSaveDialog(new Stage());
-        if (file != null) {
-            try {
-                BufferedImage bufferedImage = convertToBufferedImage(mainImage.getImage());
-                // Đảm bảo file có phần mở rộng ".png"
-                if (!file.getPath().endsWith(".png")) {
-                    file = new File(file.getPath() + ".png");
-                }
-                ImageIO.write(bufferedImage, "png", file);
-                System.out.println("Image saved successfully.");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
 
@@ -376,6 +407,71 @@ public class MainViewController {
             }
         }
     }
+    public void saveNonTransparentImage(Image image, Stage stage) {
+        if (image == null) {
+            System.out.println("Không có ảnh để lưu.");
+            return;
+        }
+
+        // Khởi tạo FileChooser để lưu ảnh
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Image");
+
+        // Đặt bộ lọc mở rộng file để chỉ hiển thị PNG
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG Files", "*.png"));
+
+        // Mở cửa sổ chọn file và nhận đường dẫn của file
+        File file = fileChooser.showSaveDialog(stage);
+        if (file != null) {
+            try {
+                // Tạo `ImageView` từ `Image`
+                ImageView imageView = new ImageView(image);
+
+                // Tạo `SnapshotParameters` để không có nền trong suốt (không dùng Color.TRANSPARENT)
+                SnapshotParameters params = new SnapshotParameters();
+                params.setFill(Color.WHITE); // Sử dụng màu nền trắng thay vì trong suốt
+
+                // Chụp ảnh từ `ImageView`
+                WritableImage writableImage = imageView.snapshot(params, null);
+
+                // Chuyển đổi `WritableImage` thành `BufferedImage`
+                BufferedImage bufferedImage = writableImageToBufferedImage(writableImage);
+
+                // Đảm bảo file có phần mở rộng ".png"
+                if (!file.getPath().endsWith(".png")) {
+                    file = new File(file.getPath() + ".png");
+                }
+
+                // Lưu ảnh dưới dạng PNG không có nền
+                ImageIO.write(bufferedImage, "PNG", file);
+                System.out.println("Image saved successfully without transparency.");
+            } catch (IOException e) {
+                System.out.println("Lỗi khi lưu ảnh: " + e.getMessage());
+            }
+        }
+    }
+
+    // Chuyển đổi WritableImage thành BufferedImage
+    private BufferedImage writableImageToBufferedImage(WritableImage writableImage) {
+        int width = (int) writableImage.getWidth();
+        int height = (int) writableImage.getHeight();
+
+        // Tạo BufferedImage với RGB để không có kênh alpha (không có nền trong suốt)
+        BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+
+        // Duyệt qua từng pixel trong WritableImage và chuyển sang BufferedImage
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                // Lấy màu của pixel từ WritableImage
+                Color color = writableImage.getPixelReader().getColor(x, y);
+                // Chuyển màu sắc sang mã RGB (bỏ alpha)
+                int rgb = color.hashCode() & 0xFFFFFF;  // Bỏ kênh alpha
+                // Đặt màu pixel vào BufferedImage
+                bufferedImage.setRGB(x, y, rgb);
+            }
+        }
+        return bufferedImage;
+    }
 
 
     private void morphologyImage() {
@@ -397,10 +493,41 @@ public class MainViewController {
 
     }
 
-    public void saveImg(){
+    public void saveImage(Image img){
+        // Kiểm tra nếu không có ảnh
+        if (img == null) {
+            System.out.println("No image to save.");
+            return;
+        }
+
+        // Sử dụng FileChooser để chọn nơi lưu ảnh
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Image");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG Files", "*.png"));
+
+        // Hiển thị hộp thoại lưu file
+        File file = fileChooser.showSaveDialog(new Stage());
+
+        if (file != null) {
+            try {
+                // Chuyển đổi Image của JavaFX sang BufferedImage
+                BufferedImage bufferedImage = convertToBufferedImage(img);
+                ImageIO.write(bufferedImage, "png", file);
+                System.out.println("Image saved successfully.");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void saveMainImage(){
         // Kiểm tra nếu mainImage không có ảnh
         if (mainImage.getImage() == null) {
             System.out.println("No image to save.");
+            return;
+        }
+        if (overlayImage != null){
+            combineImages();
             return;
         }
 
@@ -556,12 +683,26 @@ public class MainViewController {
     }
     public void initialFunction(){
         this.proccessIMG = new FilterImage(mainImagePath);
+
+        // khởi tạo các đối tượng khác
         this.removeBackgroundClass = new RemoveBackground();
         this.enhancementClass = new Enhancement();
         this.morphologyClass = new Morphology();
     }
+    public String ImportAndGetPathImage(){
+        // Mở cửa sổ chọn file
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Chọn hình ảnh");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif")
+        );
 
-    private void importImage() {
+        // Lấy file được chọn
+        File selectedFile = fileChooser.showOpenDialog(new Stage());
+        return selectedFile.getAbsolutePath();
+    }
+
+    public void importImage() {
         // Mở cửa sổ chọn file
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Chọn hình ảnh");
@@ -599,7 +740,7 @@ public class MainViewController {
         mat.get(0, 0, pixels); // Get pixel data from Mat
 
         // Create a WritableImage and set its pixel data
-        javafx.scene.image.WritableImage image = new javafx.scene.image.WritableImage(width, height);
+        WritableImage image = new javafx.scene.image.WritableImage(width, height);
         image.getPixelWriter().setPixels(0, 0, width, height,
                 javafx.scene.image.PixelFormat.getByteRgbInstance(), pixels, 0, width * channels);
 

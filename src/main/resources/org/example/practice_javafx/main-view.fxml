@@ -9,6 +9,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.Group?>
 <AnchorPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="org.example.practice_javafx.Controller.MainViewController"
@@ -16,7 +17,11 @@
 
     <!-- Main Image Section with Border -->
     <StackPane layoutX="10" layoutY="10" prefWidth="600" prefHeight="450" style="-fx-border-color: black; -fx-border-width: 2;">
-        <ImageView fx:id="mainImage" fitWidth="600" fitHeight="450" preserveRatio="true" />
+        <Group fx:id="imageGroup">
+            <!-- Chứa ảnh sẽ được thêm vào đây -->
+            <ImageView fx:id="mainImage" fitWidth="600" fitHeight="450" preserveRatio="true" />
+            <ImageView fx:id="overlayImage" fitWidth="100" fitHeight="75" preserveRatio="true" />
+        </Group>
     </StackPane>
 
 
@@ -33,7 +38,7 @@
 <!--        <Button fx:id="compressButton" text="Nén ảnh"/>-->
 <!--        <Button fx:id="formatButton" text="Chuyển Đổi Định Dạng" />-->
         <Button fx:id="whiteBalanceButton" text="Cân bằng trắng" prefWidth="100" />
-
+        <Button fx:id="insertImg" text="Chèn ảnh" prefWidth="100" />
 <!--        <Button fx:id="downloadButton" text="Tải về"/>-->
 
     </VBox>
