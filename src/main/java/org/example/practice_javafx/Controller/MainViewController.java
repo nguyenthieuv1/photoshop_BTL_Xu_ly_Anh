@@ -93,6 +93,9 @@ public class MainViewController {
     private Button morphology;
 
     @FXML
+    private Button deleteImgInsert;
+
+    @FXML
     private Label imageLabel1;
 
     @FXML
@@ -115,6 +118,12 @@ public class MainViewController {
 
     @FXML
     private Button insertImg;
+
+    @FXML
+    private Button zoomInImgInsert;
+
+    @FXML
+    private Button zoomOutImgInsert;
 
     @FXML
     private StackPane box1;
@@ -159,6 +168,20 @@ public class MainViewController {
         save.setOnMouseClicked(event -> saveMainImage());
         morphology.setOnMouseClicked(event -> morphologyImage());
         insertImg.setOnAction(event -> insertImg());
+        deleteImgInsert.setOnMouseClicked(event -> overlayImage.setImage(null));
+        if (overlayImage != null){
+            zoomInImgInsert.setOnMouseClicked(event -> {
+                overlayImage.setScaleX(overlayImage.getScaleX() * 1.1);
+                overlayImage.setScaleY(overlayImage.getScaleY() * 1.1);
+            });
+            zoomOutImgInsert.setOnMouseClicked(event -> {
+                overlayImage.setScaleX(overlayImage.getScaleX() / 1.1);
+                overlayImage.setScaleY(overlayImage.getScaleY() / 1.1);
+            });
+        } else {
+            zoomInImgInsert.setDisable(true);
+            zoomOutImgInsert.setDisable(true);
+        }
 
         addDragEventHandlersToImage();
 

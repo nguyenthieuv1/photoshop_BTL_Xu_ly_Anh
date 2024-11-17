@@ -39,6 +39,9 @@
 <!--        <Button fx:id="formatButton" text="Chuyển Đổi Định Dạng" />-->
         <Button fx:id="whiteBalanceButton" text="Cân bằng trắng" prefWidth="100" />
         <Button fx:id="insertImg" text="Chèn ảnh" prefWidth="100" />
+        <Button fx:id="deleteImgInsert" text="Xóa ảnh chèn" prefWidth="100" />
+        <Button fx:id="zoomInImgInsert" text="ảnh chèn + " prefWidth="100" />
+        <Button fx:id="zoomOutImgInsert" text="ảnh chèn - " prefWidth="100" />
 <!--        <Button fx:id="downloadButton" text="Tải về"/>-->
 
     </VBox>
